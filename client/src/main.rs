@@ -27,13 +27,16 @@ fn main() {
 }
 
 fn read_something (reader: &mut BufReader<&TcpStream>) {
-  let mut msg = String::new();
-  reader.read_line(&mut msg).expect("RECEIVE FAILURE!!!");
-  println!("{}", msg);
+    println!("read!");
+    let mut msg = String::new();
+    reader.read_line(&mut msg).expect("RECEIVE FAILURE!!!");
+    println!("input ok.");
+    println!("{}", msg);
 }
 
 fn write_something (writer: &mut BufWriter<&TcpStream>, comment: &str) {
-  let msg = format!("MESSAGE: {}\n", comment);
-  writer.write(msg.as_bytes()).expect("SEND FAILURE!!!");
-  writer.flush().unwrap();
+    println!("write!");
+    let msg = format!("MESSAGE: {}\n", comment);
+    writer.write(msg.as_bytes()).expect("SEND FAILURE!!!");
+    writer.flush().unwrap();
 }

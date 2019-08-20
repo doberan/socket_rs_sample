@@ -1,5 +1,5 @@
 use std::io::{Error, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener, TcpStream, Shutdown};
 use std::thread;
 
 fn main() {
@@ -9,22 +9,27 @@ fn main() {
             Err(e) => { eprintln!("error: {}", e)},
             Ok(stream) => {
                 thread::spawn(move || {
-                    handler(stream).unwrap_or_else(|error| eprintln!("{:?}", error));
+                    handler(stream);
                 });
             }
         }
     }
+    drop(listener);
 }
 
-fn handler(mut stream: TcpStream) -> Result<(), Error> {
-    println!("Connection from {}", stream.peer_addr()?);
+fn handler(mut stream: TcpStream) {
+    println!("Connection from {}", stream.peer_addr().unwrap());
     let mut buffer = [0; 1024];
-    loop {
-        let nbytes = stream.read(&mut buffer)?;
-        if nbytes == 0 {
-            return Ok(());
+    while match stream.read(&mut buffer) {
+        Ok(nbytes) => {
+            println!("nbytes = {:?}", nbytes.to_string());
+            stream.write(&buffer[..nbytes]).unwrap();
+            true
+        },
+        Err(_) => {
+            println!("Error occured, terminating connection with {}", stream.peer_addr().unwrap());
+            stream.shutdown(Shutdown::Both).unwrap();
+            false
         }
-        stream.write(&buffer[..nbytes])?;
-        stream.flush()?;
-    }
+    } {};
 }
